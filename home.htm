@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulldog Stream - Live TV & Movie Show</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="backend.js"></script>
+    <script src="auto-seo.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#B800FF">
+    <link rel="stylesheet" href="style.css">
+    <!-- Chosen Palette: Dark Theme (Primary: #1A1A1A, Secondary: #2A2A2A, Accent: #B800FF) -->
+    <!-- Application Structure Plan: A single-page application (SPA) structure is used for a fast, app-like user experience. Navigation is handled by showing/hiding different 'page' divs via JavaScript with smooth transitions. This structure was chosen to keep the user within a single context, allowing for quick transitions between sections like Home, TV, Media, and the detailed Settings panel without page reloads, which is ideal for a media consumption platform. The information architecture prioritizes content discovery, with clear pathways for guests (public content) and logged-in users (full features). A centralized modal system is introduced for alerts and LLM outputs, enhancing user feedback. -->
+    <!-- Visualization & Content Choices: Report Info: TV/Movie content -> Goal: Organize/Browse -> Viz/Presentation: Interactive HTML/CSS grid of cards with enhanced hover effects -> Interaction: Hover effects, click to view details, play button overlay -> Justification: A grid is the most efficient and visually appealing way to present a large library of visual content. Enhanced hovers provide richer interaction. Report Info: EPG/Schedule -> Goal: Inform/Organize -> Viz/Presentation: HTML table-like structure -> Interaction: Auto-scroll to current time, highlighted current program, ✨Get More Details (LLM) -> Justification: A time-based table is the standard and most intuitive way to display a broadcast schedule. LLM provides richer context. Report Info: User Coin Stats -> Goal: Inform -> Viz/Presentation: Chart.js Doughnut Chart -> Interaction: Hover to see details -> Justification: A doughnut chart provides a quick, visually engaging summary of earned vs. spent coins, enhancing the user dashboard. Report Info: News/Blog Posts -> Goal: Inform -> Viz/Presentation: Card-based layout with landscape image and publish time, ✨Summarize Article (LLM) -> Interaction: Click for details/action, LLM summary in modal -> Justification: Cards provide a clear, digestible format for news articles, with publish time adding crucial context. Landscape images enhance visual appeal. LLM summary in a modal improves presentation. Report Info: Subscription Management -> Goal: Allow purchase/redemption -> Viz/Presentation: Dropdown selectors with coin costs, redeem buttons, dynamic status updates, loading states -> Interaction: Select duration, click redeem, real-time coin deduction and status update in modal -> Justification: Provides clear options for users to spend earned coins on premium features, directly integrating the earning system with benefits, with improved user feedback. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #1A1A1A; }
+        .nav-link-active { color: #B800FF; border-bottom: 2px solid #B800FF; }
+        .dropdown:hover .dropdown-menu { display: block; }
+        .sidebar-link-active { background-color: #B800FF; color: #FFFFFF; }
+        .content-section { display: none; opacity: 0; transition: opacity 0.5s ease-in-out; }
+        .content-section.active { display: block; opacity: 1; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #2A2A2A; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        .chart-container { position: relative; width: 100%; max-width: 300px; margin-left: auto; margin-right: auto; height: 300px; max-height: 300px; }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: #2A2A2A;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 90%;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease-in-out;
+        }
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #B800FF;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .skeleton {
+            background: linear-gradient(-90deg, #333 0%, #444 50%, #333 100%);
+            background-size: 400% 100%;
+            animation: skeleton-loading 1.2s ease-in-out infinite;
+        }
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body class="text-gray-200">
+
+    <div id="app-container" class="min-h-screen flex flex-col">
+        
+        <header class="bg-black/30 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-800">
+            <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center space-x-8">
+                        <a href="#" class="flex-shrink-0 text-2xl font-bold text-white">Bulldog</a>
+                        <div class="hidden md:flex items-center space-x-4">
+                            <a href="#home" class="nav-link text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center" data-page="home">
+                                🏠 <span class="ml-1">Home</span>
+                            </a>
+                            <div class="relative dropdown">
+                                <button class="nav-link text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center" data-page="tv">
+                                    📺 <span class="ml-1">TV</span>
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                                <div class="dropdown-menu absolute left-0 mt-2 w-48 bg-[#2A2A2A] rounded-md shadow-lg py-1 hidden">
+                                    <a href="#tv" data-subpage="live-tv" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Live TV</a>
+                                    <a href="#tv" data-subpage="epg" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Today's Schedule (EPG)</a>
+                                    <a href="#tv" data-subpage="sports" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Sports</a>
+                                </div>
+                            </div>
+                            <div class="relative dropdown">
+                                <button class="nav-link text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center" data-page="media">
+                                    🎬 <span class="ml-1">Media</span>
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                                <div class="dropdown-menu absolute left-0 mt-2 w-48 bg-[#2A2A2A] rounded-md shadow-lg py-1 hidden">
+                                    <a href="#media" data-subpage="movies" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Movies</a>
+                                    <a href="#media" data-subpage="web-series" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Web Series</a>
+                                </div>
+                            </div>
+                            <a href="#community" class="nav-link text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium flex items-center" data-page="community">
+                                👥 <span class="ml-1">Community</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative hidden sm:block">
+                            <input type="text" id="search-input" placeholder="Search..." class="bg-[#2A2A2A] border border-gray-700 rounded-full py-1.5 px-4 pl-10 text-sm w-48 focus:w-64 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#B800FF]">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
+                            </div>
+                            <button id="clear-search-btn" class="absolute inset-y-0 right-0 pr-3 flex items-center hidden">
+                                <svg class="h-5 w-5 text-gray-500 hover:text-white" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                            </button>
+                        </div>
+                        <a href="#" title="Settings" data-page="settings">
+                            <svg class="h-6 w-6 text-gray-400 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        </a>
+                        <button id="login-button" data-page="login" class="bg-[#B800FF] text-white px-4 py-1.5 rounded-full text-sm font-semibold hover:bg-opacity-80 transition-colors">Login</button>
+                        <div id="profile-icon" class="hidden relative">
+                            <button id="profile-dropdown-btn" class="flex items-center space-x-2">
+                                <img src="https://placehold.co/40x40/B800FF/FFFFFF?text=U" class="w-9 h-9 rounded-full" alt="User Profile">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div id="profile-dropdown-menu" class="absolute right-0 mt-2 w-48 bg-[#2A2A2A] rounded-md shadow-lg py-1 hidden">
+                                <a href="#settings" data-sidebar="dashboard" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Dashboard</a>
+                                <a href="#settings" data-sidebar="profile" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">My Profile</a>
+                                <button id="logout-button" class="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700">Logout</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <section id="page-home" class="content-section">
+                <div class="mb-12">
+                    <h1 class="text-3xl font-bold text-white mb-2">Latest News & Updates</h1>
+                    <p class="text-gray-400">Stay updated with the latest in sports, movies, and events.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="news-feed-grid">
+                    <!-- News posts will be dynamically loaded here -->
+                </div>
+            </section>
+
+            <section id="page-tv" class="content-section">
+                <div class="flex justify-between items-center mb-8">
+                    <h1 class="text-3xl font-bold text-white">TV Channels & Schedule</h1>
+                    <div class="flex space-x-2 p-1 bg-[#2A2A2A] rounded-full">
+                        <button class="tv-tab-button active-tab px-4 py-1.5 text-sm font-semibold rounded-full bg-[#B800FF]" data-tv-content="live-tv-content">Live TV</button>
+                        <button class="tv-tab-button px-4 py-1.5 text-sm font-semibold rounded-full text-gray-300" data-tv-content="epg-content">EPG</button>
+                        <button class="tv-tab-button px-4 py-1.5 text-sm font-semibold rounded-full text-gray-300" data-tv-content="sports-content">Sports</button>
+                    </div>
+                </div>
+                
+                <div id="live-tv-content" class="tv-content">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6" id="live-tv-grid"></div>
+                </div>
+                <div id="epg-content" class="tv-content hidden bg-[#2A2A2A] p-4 sm:p-6 rounded-lg">
+                    <h2 class="text-xl font-bold mb-4 text-white">Today's Schedule - <span id="current-date"></span></h2>
+                    <div class="space-y-4" id="epg-list"></div>
+                </div>
+                <div id="sports-content" class="tv-content hidden">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6" id="sports-grid"></div>
+                </div>
+            </section>
+            
+            <section id="page-media" class="content-section">
+                <div class="flex justify-between items-center mb-8">
+                    <h1 class="text-3xl font-bold text-white">Movies & Web Series</h1>
+                    <div class="flex space-x-2 p-1 bg-[#2A2A2A] rounded-full">
+                        <button class="media-tab-button active-tab px-4 py-1.5 text-sm font-semibold rounded-full bg-[#B800FF]" data-media-content="movies-content">Movies</button>
+                        <button class="media-tab-button px-4 py-1.5 text-sm font-semibold rounded-full text-gray-300" data-media-content="web-series-content">Web Series</button>
+                    </div>
+                </div>
+                <div id="movies-content" class="media-content">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6" id="movies-grid"></div>
+                </div>
+                <div id="web-series-content" class="media-content hidden">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6" id="web-series-grid"></div>
+                </div>
+            </section>
+
+            <section id="page-community" class="content-section">
+                <div class="text-center py-16 bg-[#2A2A2A] rounded-lg">
+                    <h1 class="text-4xl font-bold text-white mb-4">Join Our Community!</h1>
+                    <p class="text-gray-400 max-w-2xl mx-auto mb-8">Connect with other users, get support, and stay in the loop with all the latest announcements and events.</p>
+                    <div class="flex justify-center space-x-6">
+                        <a href="#" class="flex items-center space-x-3 bg-[#5865F2] text-white font-bold py-3 px-6 rounded-full hover:bg-opacity-90 transition-colors">
+                            <span>Join on Discord</span>
+                        </a>
+                        <a href="#" class="flex items-center space-x-3 bg-[#0088cc] text-white font-bold py-3 px-6 rounded-full hover:bg-opacity-90 transition-colors">
+                            <span>Join on Telegram</span>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <section id="page-settings" class="content-section">
+                <div class="flex flex-col md:flex-row gap-8">
+                    <aside class="w-full md:w-1/4 lg:w-1/5">
+                        <h2 class="text-xl font-bold text-white mb-4">Settings</h2>
+                        <nav class="flex flex-col space-y-2">
+                            <a href="#" class="sidebar-link px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-700" data-sidebar="dashboard">Dashboard</a>
+                            <a href="#" class="sidebar-link px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-700" data-sidebar="profile">My Profile</a>
+                            <a href="#" class="sidebar-link px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-700" data-sidebar="account">Account Settings</a>
+                            <a href="#" class="sidebar-link px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-700" data-sidebar="earn">Earn</a>
+                            <a href="#" class="sidebar-link px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-700" data-sidebar="subscriptions">Subscriptions</a>
+                        </nav>
+                    </aside>
+                    <div class="flex-grow bg-[#2A2A2A] p-6 rounded-lg">
+                        <div id="sidebar-dashboard" class="sidebar-content">
+                            <h3 class="text-2xl font-bold text-white mb-6">Dashboard</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="bg-[#333333] p-6 rounded-lg text-center">
+                                    <h4 class="text-lg font-semibold text-gray-400 mb-4">Coin Balance</h4>
+                                    <div class="chart-container">
+                                        <canvas id="coin-chart"></canvas>
+                                    </div>
+                                    <p class="text-3xl font-bold text-white mt-4" id="coin-balance-display">1,250 <span class="text-base text-gray-400">Coins</span></p>
+                                </div>
+                                <div class="bg-[#333333] p-6 rounded-lg flex flex-col justify-center">
+                                    <h4 class="text-lg font-semibold text-gray-400 mb-4">Subscription Status</h4>
+                                    <div class="mb-4">
+                                        <p class="text-white font-semibold">Watch Time: <span id="watch-time-status"></span></p>
+                                        <p class="text-sm text-gray-400">No ads, full access.</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-white font-semibold">IPTV Access</p>
+                                        <div class="w-full bg-gray-600 rounded-full h-2.5 my-1">
+                                            <div id="iptv-progress-bar-fill" class="bg-[#B800FF] h-2.5 rounded-full" style="width: 75%"></div>
+                                        </div>
+                                        <p class="text-sm text-gray-400" id="iptv-days-display"></p>
+                                    </div>
+                                    <div class="mt-6 flex space-x-4">
+                                        <button class="flex-1 bg-[#B800FF] text-white font-bold py-2 px-4 rounded-full hover:bg-opacity-80">Deposit</button>
+                                        <button class="flex-1 bg-gray-600 text-white font-bold py-2 px-4 rounded-full hover:bg-gray-500">Withdraw</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="sidebar-profile" class="sidebar-content hidden">
+                            <h3 class="text-2xl font-bold text-white mb-6">My Profile</h3>
+                            <div class="flex items-center space-x-6 mb-8">
+                                <img src="https://placehold.co/100x100/B800FF/FFFFFF?text=U" class="w-24 h-24 rounded-full" alt="User Profile">
+                                <div>
+                                    <h4 class="text-xl font-bold text-white">Username</h4>
+                                    <p class="text-gray-400">user@example.com</p>
+                                    <button class="mt-2 text-sm text-[#B800FF] hover:underline">Change Picture</button>
+                                </div>
+                            </div>
+                            <form class="space-y-4">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-400">Display Name</label>
+                                    <input type="text" value="Username" class="w-full mt-1 bg-[#333333] border border-gray-600 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#B800FF]">
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-gray-400">Region</label>
+                                    <select class="w-full mt-1 bg-[#333333] border border-gray-600 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#B800FF]">
+                                        <option>United States</option>
+                                        <option selected>United Kingdom</option>
+                                        <option>Canada</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="bg-[#B800FF] text-white font-bold py-2 px-6 rounded-full hover:bg-opacity-80">Save Changes</button>
+                            </form>
+                        </div>
+                        <div id="sidebar-account" class="sidebar-content hidden">
+                            <h3 class="text-2xl font-bold text-white mb-6">Account Settings</h3>
+                             <div class="space-y-6">
+                                <div>
+                                    <h4 class="text-lg font-semibold text-white mb-2">Change Password</h4>
+                                    <form class="space-y-4">
+                                        <input type="password" placeholder="Current Password" class="w-full bg-[#333333] border border-gray-600 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#B800FF]">
+                                        <input type="password" placeholder="New Password" class="w-full mt-1 bg-[#333333] border border-gray-600 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#B800FF]">
+                                        <button type="submit" class="bg-[#B800FF] text-white font-bold py-2 px-6 rounded-full hover:bg-opacity-80">Update Password</button>
+                                    </form>
+                                </div>
+                                <div class="border-t border-gray-700 pt-6">
+                                    <h4 class="text-lg font-semibold text-white mb-2">Privacy & Security</h4>
+                                    <div class="flex items-center justify-between bg-[#333333] p-4 rounded-lg">
+                                        <div>
+                                            <p class="font-medium text-white">Two-Factor Authentication (2FA)</p>
+                                            <p class="text-sm text-gray-400">Add an extra layer of security to your account.</p>
+                                        </div>
+                                        <button class="bg-gray-600 text-white font-bold py-2 px-4 rounded-full hover:bg-gray-500">Enable</button>
+                                    </div>
+                                     <div class="flex items-center justify-between bg-[#333333] p-4 rounded-lg mt-4">
+                                        <div>
+                                            <p class="font-medium text-white">Anonymous ID</p>
+                                            <p class="text-sm text-gray-400">Hide your username from public leaderboards.</p>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                          <input type="checkbox" value="" class="sr-only peer">
+                                          <div class="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-[#B800FF] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#B800FF]"></div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="sidebar-earn" class="sidebar-content hidden">
+                            <h3 class="text-2xl font-bold text-white mb-6">Earn Coins</h3>
+                            <div class="space-y-8">
+                                <div class="bg-[#333333] p-6 rounded-lg">
+                                    <h4 class="text-lg font-semibold text-white mb-2">Refer a Friend</h4>
+                                    <p class="text-gray-400 mb-4">Share your code with friends. You both get 500 coins when they sign up!</p>
+                                    <div class="flex items-center space-x-2 bg-[#1A1A1A] p-2 rounded-lg">
+                                        <input type="text" readonly value="REF-A8X3K2" class="flex-grow bg-transparent text-white font-mono focus:outline-none">
+                                        <button class="bg-[#B800FF] text-white font-bold py-1.5 px-4 rounded-lg hover:bg-opacity-80">Copy</button>
+                                    </div>
+                                </div>
+                                <div class="bg-[#333333] p-6 rounded-lg">
+                                    <h4 class="text-lg font-semibold text-white mb-2">Complete Surveys</h4>
+                                    <p class="text-gray-400 mb-4">Earn coins by completing short surveys from our partners.</p>
+                                    <div class="space-y-3">
+                                        <div class="flex justify-between items-center bg-[#1A1A1A] p-3 rounded-lg">
+                                            <div>
+                                                <p class="font-medium text-white">Consumer Habits Survey</p>
+                                                <p class="text-sm text-gray-400">Approx. 5 minutes</p>
+                                            </div>
+                                            <button class="bg-[#B800FF] text-white font-bold py-1.5 px-4 rounded-full hover:bg-opacity-80 text-sm">Start (150 Coins)</button>
+                                        </div>
+                                        <div class="flex justify-between items-center bg-[#1A1A1A] p-3 rounded-lg">
+                                            <div>
+                                                <p class="font-medium text-white">Media Preferences Poll</p>
+                                                <p class="text-sm text-gray-400">Approx. 2 minutes</p>
+                                            </div>
+                                            <button class="bg-[#B800FF] text-white font-bold py-1.5 px-4 rounded-full hover:bg-opacity-80 text-sm">Start (75 Coins)</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="sidebar-subscriptions" class="sidebar-content hidden">
+                            <h3 class="text-2xl font-bold text-white mb-6">Manage Subscriptions</h3>
+                            <div class="space-y-6">
+                                <div class="bg-[#333333] p-6 rounded-lg">
+                                    <h4 class="text-lg font-semibold text-white mb-2">Premium Watch Time</h4>
+                                    <p class="text-gray-400 mb-4">Enjoy an ad-free experience across the entire platform. Redeem with your coins.</p>
+                                    <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                                        <select id="watch-time-select" class="flex-grow bg-[#1A1A1A] border border-gray-600 rounded-lg p-2.5 text-white focus:outline-none focus:ring-2 focus:ring-[#B800FF]">
+                                            <!-- Options populated by JS -->
+                                        </select>
+                                        <button id="redeem-watch-time-btn" class="bg-[#B800FF] text-white font-bold py-2 px-6 rounded-full hover:bg-opacity-80">Redeem</button>
+                                    </div>
+                                    <p id="watch-time-message" class="text-sm mt-2"></p>
+                                    <p class="text-white mt-4">Your Status: <span id="watch-time-status"></span></p>
+                                </div>
+                                <div class="bg-[#333333] p-6 rounded-lg">
+                                    <h4 class="text-lg font-semibold text-white mb-2">IPTV Subscription</h4>
+                                    <p class="text-gray-400 mb-4">Access exclusive IPTV channels.</p>
+                                    <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                                        <select id="iptv-select" class="flex-grow bg-[#1A1A1A] border border-gray-600 rounded-lg p-2.5 text-white focus:outline-none focus:ring-2 focus:ring-[#B800FF]">
+                                            <!-- Options populated by JS -->
+                                        </select>
+                                        <button id="redeem-iptv-btn" class="bg-[#B800FF] text-white font-bold py-2 px-6 rounded-full hover:bg-opacity-80">Redeem</button>
+                                    </div>
+                                    <p id="iptv-message" class="text-sm mt-2"></p>
+                                    <p class="text-white mt-4">Your current plan has <span id="iptv-days-display"></span>.</p>
+                                    <h5 class="text-lg font-semibold text-white mt-6 mb-2">Apply Discount Code</h5>
+                                    <form class="flex items-center space-x-2">
+                                        <input type="text" placeholder="Redeem Code" class="flex-grow bg-[#1A1A1A] border border-gray-600 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#B800FF]">
+                                        <button type="submit" class="bg-[#B800FF] text-white font-bold py-2.5 px-6 rounded-lg hover:bg-opacity-80">Apply</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="page-login" class="content-section">
+                <div class="max-w-md mx-auto bg-[#2A2A2A] p-8 rounded-lg">
+                     <h2 class="text-2xl font-bold text-white text-center mb-6">Login to Bulldog</h2>
+                     <form class="space-y-4">
+                        <div>
+                            <label class="text-sm font-medium text-gray-400">Email</label>
+                            <input type="email" class="w-full mt-1 bg-[#333333] border border-gray-600 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#B800FF]">
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-400">Password</label>
+                            <input type="password" class="w-full mt-1 bg-[#333333] border border-gray-600 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#B800FF]">
+                        </div>
+                        <button type="button" id="perform-login" class="w-full bg-[#B800FF] text-white font-bold py-2.5 px-6 rounded-full hover:bg-opacity-80">Login</button>
+                     </form>
+                     <p class="text-center text-sm text-gray-400 mt-6">
+                        Don't have an account? <a href="#" onclick="showPage('signup')" class="text-[#B800FF] hover:underline">Sign Up</a>
+                     </p>
+                </div>
+            </section>
+
+            <!-- Sign Up Page -->
+            <section id="page-signup" class="content-section">
+                <div class="max-w-md mx-auto bg-[#2A2A2A] p-8 rounded-lg">
+                     <h2 class="text-2xl font-bold text-white text-center mb-6">Join Bulldog Stream</h2>
+                     <form class="space-y-4" id="signup-form">
+                        <div>
+                            <label class="text-sm font-medium text-gray-400">Full Name</label>
+                            <input type="text" name="fullname" class="w-full mt-1 bg-[#333333] border border-gray-600 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#B800FF]" required>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-400">Email</label>
+                            <input type="email" name="email" class="w-full mt-1 bg-[#333333] border border-gray-600 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#B800FF]" required>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-400">Password</label>
+                            <input type="password" name="password" class="w-full mt-1 bg-[#333333] border border-gray-600 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#B800FF]" required>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-400">Confirm Password</label>
+                            <input type="password" name="confirmPassword" class="w-full mt-1 bg-[#333333] border border-gray-600 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#B800FF]" required>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-400">Region</label>
+                            <select name="region" class="w-full mt-1 bg-[#333333] border border-gray-600 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#B800FF]" required>
+                                <option value="">Select your region</option>
+                                <option value="US">United States</option>
+                                <option value="UK">United Kingdom</option>
+                                <option value="CA">Canada</option>
+                                <option value="AU">Australia</option>
+                                <option value="DE">Germany</option>
+                                <option value="FR">France</option>
+                                <option value="ES">Spain</option>
+                                <option value="IT">Italy</option>
+                                <option value="IN">India</option>
+                                <option value="JP">Japan</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-400">Referral Code (Optional)</label>
+                            <input type="text" name="referralCode" placeholder="Enter referral code" class="w-full mt-1 bg-[#333333] border border-gray-600 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-[#B800FF]">
+                        </div>
+                        <button type="submit" class="w-full bg-[#B800FF] text-white font-bold py-2.5 px-6 rounded-full hover:bg-opacity-80">Create Account</button>
+                     </form>
+                     <p class="text-center text-sm text-gray-400 mt-6">
+                        Already have an account? <a href="#" onclick="showPage('login')" class="text-[#B800FF] hover:underline">Sign In</a>
+                     </p>
+                </div>
+            </section>
+
+            <!-- Video Stream Detail Page -->
+            <section id="page-stream" class="content-section">
+                <div class="stream-header">
+                    <a href="#" onclick="goBackFromStream()" class="back-button">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                        Back to Sports
+                    </a>
+                    <div class="match-info">
+                        <h1 class="match-title" id="stream-title">Loading...</h1>
+                        <div class="match-tags">
+                            <span class="tag sport" id="stream-sport">Sports</span>
+                            <span class="tag live">Live</span>
+                            <span class="tag popular">Popular</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team vs Section -->
+                <div class="team-section" id="team-section" style="display: none;">
+                    <div class="team">
+                        <div class="team-logo" id="team1-logo">T1</div>
+                        <div class="team-name" id="team1-name">Team 1</div>
+                    </div>
+                    <div class="vs-separator">VS</div>
+                    <div class="team">
+                        <div class="team-logo" id="team2-logo">T2</div>
+                        <div class="team-name" id="team2-name">Team 2</div>
+                    </div>
+                </div>
+
+                <!-- Stream Quality/Language Selector -->
+                <div class="quality-selector">
+                    <button class="quality-button active" data-quality="hd" data-language="en" data-stream="1">HD Stream 1 (English)</button>
+                    <button class="quality-button" data-quality="sd" data-language="en" data-stream="2">SD Stream 2 (English)</button>
+                    <button class="quality-button" data-quality="hd" data-language="es" data-stream="3">HD Stream 3 (Spanish)</button>
+                </div>
+
+                <!-- Video Player -->
+                <div class="video-player-container">
+                    <video class="video-player" id="main-video-player" controls preload="metadata">
+                        <source src="" type="application/x-mpegURL">
+                        <p>Your browser does not support the video player.</p>
+                    </video>
+                    
+                    <!-- Login Overlay for Guest Users -->
+                    <div class="login-overlay" id="video-login-overlay">
+                        <h3>Login Required</h3>
+                        <p>Please log in to watch this content. Sign up to get started with free streaming!</p>
+                        <div class="flex space-x-4">
+                            <button onclick="showPage('login')" class="bg-[#B800FF] text-white px-6 py-2 rounded-full font-bold hover:bg-opacity-80">Login</button>
+                            <button onclick="showPage('signup')" class="bg-gray-600 text-white px-6 py-2 rounded-full font-bold hover:bg-gray-500">Sign Up</button>
+                        </div>
+                    </div>
+
+                    <!-- Ad Overlay for Free Users -->
+                    <div class="ad-overlay" id="video-ad-overlay" style="display: none;">
+                        <div class="ad-countdown" id="ad-countdown">Ad playing, video will start in <span id="ad-timer">15</span> seconds</div>
+                        <div class="text-center">
+                            <img src="https://placehold.co/600x100/333333/FFFFFF?text=Advertisement" alt="Advertisement" class="mb-4 rounded">
+                            <p class="text-gray-300 mb-4">Upgrade to Premium to remove ads and enjoy uninterrupted streaming!</p>
+                            <button onclick="showPage('settings'); navigate('settings', null, 'subscriptions')" class="bg-[#B800FF] text-white px-6 py-2 rounded-full font-bold hover:bg-opacity-80">Go Premium</button>
+                        </div>
+                        <button class="skip-ad-button" id="skip-ad-button" style="display: none;" onclick="skipAd()">Skip Ad</button>
+                    </div>
+
+                    <!-- Error State -->
+                    <div class="error-message" id="video-error" style="display: none;">
+                        <div class="error-title">Could not play video</div>
+                        <div class="error-description">There was an issue loading the video stream. Please check your connection and try again.</div>
+                        <button class="retry-button" onclick="retryVideoLoad()">Retry</button>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div class="content-loading" id="video-loading">
+                        <div class="loading-spinner"></div>
+                        <p class="text-gray-300">Loading stream...</p>
+                    </div>
+                </div>
+
+                <!-- Stream Information -->
+                <div class="mt-8 bg-[#2A2A2A] p-6 rounded-lg">
+                    <h3 class="text-xl font-bold text-white mb-4">Stream Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-gray-400">Quality:</span>
+                            <span class="text-white ml-2" id="current-quality">HD 1080p</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Language:</span>
+                            <span class="text-white ml-2" id="current-language">English</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Stream:</span>
+                            <span class="text-white ml-2" id="current-stream">Stream 1</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-400">Status:</span>
+                            <span class="text-green-400 ml-2">🔴 Live</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="bg-black/50 border-t border-gray-800 mt-12">
+            <div class="container mx-auto py-6 px-8">
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-8">
+                    <div class="col-span-2 md:col-span-1">
+                        <h3 class="text-xl font-bold text-white">Bulldog</h3>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-white">Shows</h4>
+                        <ul class="mt-2 space-y-1">
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Discover</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Popular</a></li>
+                        </ul>
+                    </div>
+                     <div>
+                        <h4 class="font-semibold text-white">TV</h4>
+                        <ul class="mt-2 space-y-1">
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Live TV</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Sports</a></li>
+                        </ul>
+                    </div>
+                     <div>
+                        <h4 class="font-semibold text-white">Media</h4>
+                        <ul class="mt-2 space-y-1">
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Movies</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Web Series</a></li>
+                        </ul>
+                    </div>
+                     <div>
+                        <h4 class="font-semibold text-white">Updates</h4>
+                        <ul class="mt-2 space-y-1">
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm">In-Progress</a></li>
+                            <li><a href="#" class="text-gray-400 hover:text-white text-sm">Bulldog UK</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="text-center text-xs text-gray-500 mt-8">&copy; 2025 Bulldog. All Rights Reserved.</p>
+            </div>
+        </footer>
+
+        <!-- Global Modal for Messages and LLM Output -->
+        <div id="global-modal-overlay" class="modal-overlay">
+            <div class="modal-content">
+                <h3 id="modal-title" class="text-xl font-bold text-white mb-4"></h3>
+                <p id="modal-message" class="text-gray-300 mb-6"></p>
+                <div class="flex justify-end">
+                    <button id="modal-close-btn" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-full hover:bg-gray-500">Close</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            const state = {
+                isLoggedIn: false,
+                currentPage: 'home',
+                currentTvTab: 'live-tv-content',
+                currentMediaTab: 'movies-content',
+                currentSidebar: 'dashboard',
+            };
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const contentSections = document.querySelectorAll('.content-section');
+            const tvTabButtons = document.querySelectorAll('.tv-tab-button');
+            const tvContent = document.querySelectorAll('.tv-content');
+            const mediaTabButtons = document.querySelectorAll('.media-tab-button');
+            const mediaContent = document.querySelectorAll('.media-content');
+            const sidebarLinks = document.querySelectorAll('.sidebar-link');
+            const sidebarContents = document.querySelectorAll('.sidebar-content');
+            const loginButton = document.getElementById('login-button');
+            const performLoginButton = document.getElementById('perform-login');
+            const profileIcon = document.getElementById('profile-icon');
+            const newsFeedGrid = document.getElementById('news-feed-grid');
+            const profileDropdownBtn = document.getElementById('profile-dropdown-btn');
+            const profileDropdownMenu = document.getElementById('profile-dropdown-menu');
+            const logoutButton = document.getElementById('logout-button');
+            const searchInput = document.getElementById('search-input');
+            const clearSearchBtn = document.getElementById('clear-search-btn');
+
+            // Subscription elements
+            const coinBalanceDisplay = document.getElementById('coin-balance-display');
+            const watchTimeStatusDisplay = document.getElementById('watch-time-status');
+            const iptvDaysDisplay = document.getElementById('iptv-days-display');
+            const watchTimeSelect = document.getElementById('watch-time-select');
+            const redeemWatchTimeBtn = document.getElementById('redeem-watch-time-btn');
+            const watchTimeMessage = document.getElementById('watch-time-message');
+            const iptvSelect = document.getElementById('iptv-select');
+            const redeemIptvBtn = document.getElementById('redeem-iptv-btn');
+            const iptvMessage = document.getElementById('iptv-message');
+
+            // Modal elements
+            const globalModalOverlay = document.getElementById('global-modal-overlay');
+            const modalTitle = document.getElementById('modal-title');
+            const modalMessage = document.getElementById('modal-message');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+
+
+            let userCoins = 1250; // Initial coins
+            let userWatchTimeRemaining = 0; // In minutes
+            let userIptvDaysRemaining = 22; // In days
+
+
+            const mockData = {
+                news: [
+                    { 
+                        id: 'news-1',
+                        title: "Tonight: ARG vs BRA", 
+                        image: "https://placehold.co/600x337/1A1A1A/FFFFFF?text=Match+Preview", // Landscape image
+                        description: "Tonight, the highly anticipated semifinal qualification match between Argentina and Brazil will air live on Ten Sports and ABS Play. This is a crucial game that could determine which team advances to the finals. Expect intense rivalry, spectacular plays, and a thrilling atmosphere as both teams vie for victory. Make sure to tune in early to catch all the pre-match analysis and team lineups.", 
+                        publishTime: "2 hours ago",
+                        actionText: "Watch Now",
+                        actionPage: "tv",
+                        actionSubpage: "sports"
+                    },
+                    { 
+                        id: 'news-2',
+                        title: "\"Galaxy Runners\" Premieres", 
+                        image: "https://placehold.co/600x337/1A1A1A/FFFFFF?text=New+Series", // Landscape image
+                        description: "The most anticipated web series of the year, 'Galaxy Runners,' is finally here! Dive into an epic sci-fi adventure set in a distant future where humanity explores new frontiers. Follow a diverse crew of space explorers as they navigate treacherous galaxies, encounter alien civilizations, and uncover ancient mysteries. With stunning visuals and a gripping storyline, this series promises to keep you on the edge of your seat. Available now in our Media section.", 
+                        publishTime: "1 day ago",
+                        actionText: "Explore Media",
+                        actionPage: "media",
+                        actionSubpage: "web-series"
+                    },
+                    { 
+                        id: 'news-3',
+                        title: "New Earning Features Added", 
+                        image: "https://placehold.co/600x337/1A1A1A/FFFFFF?text=System+Update", // Landscape image
+                        description: "Exciting news for all Bulldog Stream users! We've just rolled out new features to help you earn more coins. You can now participate in a wider variety of surveys, each offering generous coin rewards for your valuable feedback. Head over to the 'Earn' section in your dashboard to discover the latest opportunities and boost your coin balance. These coins can be redeemed for premium watch time and other exclusive benefits!", 
+                        publishTime: "3 days ago",
+                        actionText: "Go to Dashboard",
+                        actionPage: "settings",
+                        actionSidebar: "earn"
+                    },
+                    {
+                        id: 'news-4',
+                        title: "Bulldog Stream Summer Movie Marathon",
+                        image: "https://placehold.co/600x337/1A1A1A/FFFFFF?text=Movie+Marathon", // Landscape image
+                        description: "Get ready for a month of non-stop blockbusters! Bulldog Stream is hosting its annual Summer Movie Marathon, featuring a curated selection of action, comedy, drama, and sci-fi films. From timeless classics to recent hits, there's something for everyone. Check our detailed schedule for specific movie timings and genres. Don't miss out on the ultimate cinematic experience from the comfort of your home!",
+                        publishTime: "5 days ago",
+                        actionText: "View Movies",
+                        actionPage: "media",
+                        actionSubpage: "movies"
+                    },
+                    {
+                        id: 'news-5',
+                        title: "New Channels Added to Live TV",
+                        image: "https://placehold.co/600x337/1A1A1A/FFFFFF?text=New+Channels", // Landscape image
+                        description: "We've expanded our Live TV offerings with exciting new channels to bring you even more entertainment! Discover a fresh lineup of sports, news, and lifestyle channels, providing diverse content for every interest. Explore them now and find your new favorite broadcast. This expansion is part of our ongoing commitment to enhance your viewing experience.",
+                        publishTime: "1 week ago",
+                        actionText: "Explore Live TV",
+                        actionPage: "tv",
+                        actionSubpage: "live-tv"
+                    }
+                ],
+                channels: [
+                    { name: 'Ten Sports', logo: 'https://placehold.co/200x150/333333/FFFFFF?text=Ten+Sports', category: 'sports' },
+                    { name: 'Star News', logo: 'https://placehold.co/200x150/333333/FFFFFF?text=Star+News', category: 'news' },
+                    { name: 'HBO', logo: 'https://placehold.co/200x150/333333/FFFFFF?text=HBO', category: 'movies' },
+                    { name: 'Discovery', logo: 'https://placehold.co/200x150/333333/FFFFFF?text=Discovery', category: 'docs' },
+                    { name: 'ESPN', logo: 'https://placehold.co/200x150/333333/FFFFFF?text=ESPN', category: 'sports' },
+                    { name: 'Nat Geo', logo: 'https://placehold.co/200x150/333333/FFFFFF?text=Nat+Geo', category: 'docs' },
+                ],
+                movies: Array(12).fill(0).map((_, i) => ({ title: `Movie Title ${i+1}`, poster: `https://placehold.co/400x600/1A1A1A/FFFFFF?text=Movie+${i+1}` })),
+                series: Array(12).fill(0).map((_, i) => ({ title: `Series Title ${i+1}`, poster: `https://placehold.co/400x600/2A2A2A/FFFFFF?text=Series+${i+1}` })),
+                epg: [
+                    { id: 'epg-1', time: '08:00', show: 'Good Morning Sports', channel: 'ESPN', description: 'Start your day with the latest sports headlines, highlights, and in-depth analysis from around the world. Our expert commentators break down the biggest games, transfer news, and upcoming events.' },
+                    { id: 'epg-2', time: '09:00', show: 'Intercity Friendly: Cadiz vs Las Palmas', channel: 'Ten Sports', description: 'Catch the live friendly match between Cadiz and Las Palmas. A great opportunity to see new tactics and player performances before the official season begins. Commentary in English.' },
+                    { id: 'epg-3', time: '11:00', show: 'Planet Earth II', channel: 'Discovery', description: 'Journey to the most incredible habitats on Earth. This episode explores the hidden lives of animals in remote jungles, vast deserts, and deep oceans. Stunning cinematography and groundbreaking natural history storytelling.' },
+                    { id: 'epg-4', time: '12:00', show: 'Mid-day News Report', channel: 'Star News', description: 'Your comprehensive update on national and international news. Featuring breaking stories, political developments, economic insights, and weather forecasts to keep you informed throughout your day.' },
+                    { id: 'epg-5', time: '14:00', show: 'Movie: The Dark Knight', channel: 'HBO', description: 'Batman faces his greatest psychological and physical test against the Joker, a master criminal who unleashes chaos and challenges Batman to cross the fine line between hero and vigilante. A critically acclaimed superhero thriller.' },
+                ],
+                watchTimeOptions: [
+                    { durationMinutes: 60, coins: 10, label: "1 Hour (10 Coins)" },
+                    { durationMinutes: 1440, coins: 100, label: "1 Day (100 Coins)" },
+                    { durationMinutes: 10080, coins: 500, label: "7 Days (500 Coins)" }
+                ],
+                iptvOptions: [
+                    { durationDays: 1, coins: 50, label: "1 Day (50 Coins)" },
+                    { durationDays: 7, coins: 300, label: "7 Days (300 Coins)" },
+                    { durationDays: 30, coins: 1000, label: "30 Days (1000 Coins)" }
+                ]
+            };
+
+            function showModal(title, message, isError = false) {
+                modalTitle.textContent = title;
+                modalMessage.textContent = message;
+                if (isError) {
+                    modalMessage.style.color = '#FF0000';
+                } else {
+                    modalMessage.style.color = '#FFFFFF';
+                }
+                globalModalOverlay.classList.add('active');
+            }
+
+            function hideModal() {
+                globalModalOverlay.classList.remove('active');
+                modalTitle.textContent = '';
+                modalMessage.textContent = '';
+                modalMessage.style.color = '';
+            }
+
+            async function callPollinationsAI(prompt, loadingElement = null) {
+                if (loadingElement) {
+                    loadingElement.innerHTML = `<div class="spinner mx-auto"></div>`;
+                    loadingElement.classList.remove('hidden');
+                }
+                // Using the GET endpoint for Pollinations.AI text generation
+                const apiUrl = `https://text.pollinations.ai/${encodeURIComponent(prompt)}`; 
+                
+                try {
+                    const response = await fetch(apiUrl);
+                    const text = await response.text(); // Pollinations.AI returns plain text for text generation
+                    return text;
+                } catch (error) {
+                    console.error('Error calling Pollinations.AI API:', error);
+                    return 'Error: Could not connect to the AI service.';
+                } finally {
+                    if (loadingElement) {
+                        loadingElement.classList.add('hidden');
+                    }
+                }
+            }
+
+            function createNewsCard(item) {
+                return `
+                    <div class="bg-[#2A2A2A] rounded-lg overflow-hidden shadow-lg transform hover:scale-105 transition-transform duration-300 group">
+                        <img src="${item.image}" alt="${item.title}" class="w-full aspect-video object-cover">
+                        <div class="p-6">
+                            <h3 class="font-bold text-xl mb-2 text-white">${item.title}</h3>
+                            <p class="text-gray-400 text-sm mb-2">${item.publishTime}</p>
+                            <p class="text-gray-400 text-base mb-4">${item.description}</p>
+                            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mt-4">
+                                <button class="w-full sm:w-auto bg-[#B800FF] text-white font-bold py-2 px-4 rounded-full hover:bg-opacity-80 transition-colors"
+                                    data-page="${item.actionPage}"
+                                    ${item.actionSubpage ? `data-subpage="${item.actionSubpage}"` : ''}
+                                    ${item.actionSidebar ? `data-sidebar="${item.actionSidebar}"` : ''}>
+                                    ${item.actionText}
+                                </button>
+                                <button class="summarize-news-btn w-full sm:w-auto bg-gray-600 text-white font-bold py-2 px-4 rounded-full hover:bg-gray-500 transition-colors text-sm" data-news-id="${item.id}">
+                                    ✨ Summarize Article
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function createContentCard(item, type) {
+                const isMedia = type === 'movie' || type === 'series';
+                const popularTag = Math.random() > 0.7 ? `<div class="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full">Popular</div>` : '';
+                return `
+                    <div class="bg-[#2A2A2A] rounded-lg overflow-hidden shadow-lg group relative cursor-pointer transform hover:-translate-y-1 transition-transform duration-300">
+                        <img src="${isMedia ? item.poster : item.logo}" alt="${isMedia ? item.title : item.name}" class="w-full ${isMedia ? 'aspect-[2/3]' : 'aspect-video'} object-cover">
+                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <button class="text-white text-2xl w-12 h-12 bg-white/20 rounded-full backdrop-blur-sm flex items-center justify-center">▶</button>
+                        </div>
+                        ${popularTag}
+                        <div class="p-3">
+                            <h4 class="font-semibold text-white truncate">${isMedia ? item.title : item.name}</h4>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function populateNewsFeed() {
+                newsFeedGrid.innerHTML = mockData.news.map(item => createNewsCard(item)).join('');
+                document.querySelectorAll('.summarize-news-btn').forEach(button => {
+                    button.addEventListener('click', async (event) => {
+                        const newsId = event.target.dataset.newsId;
+                        const newsItem = mockData.news.find(n => n.id === newsId);
+                        
+                        if (newsItem) {
+                            showModal('Summarizing Article...', '<div class="spinner mx-auto"></div>');
+                            const prompt = `Summarize the following news article: "${newsItem.description}"`;
+                            const summary = await callPollinationsAI(prompt);
+                            showModal('Article Summary', summary);
+                        }
+                    });
+                });
+            }
+
+            function populateGrids() {
+                document.getElementById('live-tv-grid').innerHTML = mockData.channels.map(c => createContentCard(c, 'channel')).join('');
+                document.getElementById('sports-grid').innerHTML = mockData.channels.filter(c => c.category === 'sports').map(c => createContentCard(c, 'channel')).join('');
+                document.getElementById('movies-grid').innerHTML = mockData.movies.map(m => createContentCard(m, 'movie')).join('');
+                document.getElementById('web-series-grid').innerHTML = mockData.series.map(s => createContentCard(s, 'series')).join('');
+            }
+
+            function populateEPG() {
+                const epgList = document.getElementById('epg-list');
+                const now = new Date();
+                document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                
+                const currentHour = now.getHours();
+                epgList.innerHTML = mockData.epg.map(item => {
+                    const itemHour = parseInt(item.time.split(':')[0]);
+                    const isCurrent = itemHour === currentHour;
+                    const isPast = itemHour < currentHour;
+                    
+                    let itemClass = 'bg-[#333333]';
+                    if (isCurrent) itemClass = 'bg-[#B800FF]';
+                    if (isPast) itemClass = 'bg-opacity-50 text-gray-500';
+
+                    return `
+                        <div class="flex flex-col space-y-2 p-3 rounded-lg ${itemClass} ${isPast ? '' : 'text-white'}">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-16 font-bold">${item.time}</div>
+                                <div class="flex-grow">
+                                    <p class="font-semibold">${item.show}</p>
+                                    <p class="text-sm ${isPast ? 'text-gray-600' : 'text-gray-400'}">${item.channel}</p>
+                                </div>
+                                ${!isPast ? '<button class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-1 px-3 rounded-full text-xs">Watch</button>' : ''}
+                            </div>
+                            <button class="get-details-epg-btn bg-gray-700 hover:bg-gray-600 text-white font-bold py-1.5 px-3 rounded-full text-xs self-start" data-epg-id="${item.id}">
+                                ✨ Get More Details
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+
+                document.querySelectorAll('.get-details-epg-btn').forEach(button => {
+                    button.addEventListener('click', async (event) => {
+                        const epgId = event.target.dataset.epgId;
+                        const epgItem = mockData.epg.find(e => e.id === epgId);
+
+                        if (epgItem) {
+                            showModal(`Details for ${epgItem.show}`, '<div class="spinner mx-auto"></div>');
+                            const prompt = `Provide a detailed description for the TV show "${epgItem.show}" on "${epgItem.channel}". Include genre, key themes, and target audience.`;
+                            const details = await callPollinationsAI(prompt);
+                            showModal(`Details for ${epgItem.show}`, details);
+                        }
+                    });
+                });
+            }
+            
+            function updateUI() {
+                contentSections.forEach(section => {
+                    section.classList.remove('active');
+                });
+                const activeSection = document.getElementById(`page-${state.currentPage}`);
+                if (activeSection) {
+                    activeSection.classList.add('active');
+                }
+
+                navLinks.forEach(link => {
+                    link.classList.remove('nav-link-active');
+                });
+                const currentNavLink = document.querySelector(`.nav-link[data-page="${state.currentPage}"]`);
+                if (currentNavLink) {
+                    currentNavLink.classList.add('nav-link-active');
+                }
+
+                tvContent.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== state.currentTvTab);
+                });
+                tvTabButtons.forEach(button => {
+                    button.classList.toggle('active-tab', button.dataset.tvContent === state.currentTvTab);
+                    button.classList.toggle('bg-[#B800FF]', button.dataset.tvContent === state.currentTvTab);
+                    button.classList.toggle('text-gray-300', button.dataset.tvContent !== state.currentTvTab);
+                });
+
+                mediaContent.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== state.currentMediaTab);
+                });
+                mediaTabButtons.forEach(button => {
+                    button.classList.toggle('active-tab', button.dataset.mediaContent === state.currentMediaTab);
+                    button.classList.toggle('bg-[#B800FF]', button.dataset.mediaContent === state.currentMediaTab);
+                    button.classList.toggle('text-gray-300', button.dataset.mediaContent !== state.currentMediaTab);
+                });
+
+                sidebarContents.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== `sidebar-${state.currentSidebar}`);
+                });
+                sidebarLinks.forEach(link => {
+                    link.classList.toggle('sidebar-link-active', link.dataset.sidebar === state.currentSidebar);
+                });
+
+                loginButton.classList.toggle('hidden', state.isLoggedIn);
+                profileIcon.classList.toggle('hidden', !state.isLoggedIn);
+                profileDropdownMenu.classList.add('hidden'); // Hide dropdown on page change
+
+                updateSubscriptionUI(); 
+            }
+
+            function navigate(pageId, subPageId = null, sidebarId = null) {
+                state.currentPage = pageId;
+                if (subPageId) {
+                    if (pageId === 'tv') state.currentTvTab = subPageId + '-content';
+                    if (pageId === 'media') state.currentMediaTab = subPageId + '-content';
+                }
+                if (sidebarId) {
+                    state.currentSidebar = sidebarId;
+                }
+                updateUI();
+            }
+
+            document.body.addEventListener('click', e => {
+                const target = e.target.closest('[data-page], [data-subpage], [data-sidebar]');
+                if (!target) {
+                    profileDropdownMenu.classList.add('hidden'); // Close dropdown if clicked outside
+                    return;
+                }
+
+                e.preventDefault();
+                const page = target.dataset.page;
+                const subpage = target.dataset.subpage;
+                const sidebar = target.dataset.sidebar;
+
+                if (page) navigate(page, subpage, sidebar);
+                else if (sidebar) navigate('settings', null, sidebar); 
+            });
+
+            tvTabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    state.currentTvTab = button.dataset.tvContent;
+                    updateUI();
+                });
+            });
+
+            mediaTabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    state.currentMediaTab = button.dataset.mediaContent;
+                    updateUI();
+                });
+            });
+            
+            performLoginButton.addEventListener('click', () => {
+                state.isLoggedIn = true;
+                navigate('home');
+            });
+
+            logoutButton.addEventListener('click', () => {
+                state.isLoggedIn = false;
+                navigate('home');
+            });
+
+            profileDropdownBtn.addEventListener('click', (event) => {
+                event.stopPropagation(); // Prevent click from bubbling to body and closing immediately
+                profileDropdownMenu.classList.toggle('hidden');
+            });
+
+            searchInput.addEventListener('input', () => {
+                if (searchInput.value.length > 0) {
+                    clearSearchBtn.classList.remove('hidden');
+                } else {
+                    clearSearchBtn.classList.add('hidden');
+                }
+            });
+
+            clearSearchBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                clearSearchBtn.classList.add('hidden');
+                searchInput.focus();
+            });
+            
+            modalCloseBtn.addEventListener('click', hideModal);
+
+            let coinChartInstance; 
+
+            function createCoinChart() {
+                const ctx = document.getElementById('coin-chart').getContext('2d');
+                if (coinChartInstance) {
+                    coinChartInstance.destroy(); 
+                }
+                coinChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Earned', 'Spent'],
+                        datasets: [{
+                            data: [userCoins, 850], 
+                            backgroundColor: ['#B800FF', '#444444'],
+                            borderColor: '#333333',
+                            borderWidth: 4,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                enabled: true,
+                                backgroundColor: '#1A1A1A',
+                                titleFont: { size: 14, weight: 'bold' },
+                                bodyFont: { size: 12 },
+                                padding: 10,
+                                cornerRadius: 6,
+                            }
+                        }
+                    }
+                });
+            }
+
+            mockData.watchTimeOptions.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option.durationMinutes;
+                opt.textContent = option.label;
+                watchTimeSelect.appendChild(opt);
+            });
+
+            mockData.iptvOptions.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option.durationDays;
+                opt.textContent = option.label;
+                iptvSelect.appendChild(opt);
+            });
+
+            function updateSubscriptionUI() {
+                coinBalanceDisplay.textContent = `${userCoins} Coins`;
+                
+                if (userWatchTimeRemaining > 0) {
+                    const hours = Math.floor(userWatchTimeRemaining / 60);
+                    const minutes = userWatchTimeRemaining % 60;
+                    watchTimeStatusDisplay.innerHTML = `<span class="font-bold text-[#B800FF]">Premium</span> (${hours}h ${minutes}m remaining)`;
+                } else {
+                    watchTimeStatusDisplay.innerHTML = `<span class="font-bold text-gray-500">Free Tier</span>`;
+                }
+
+                if (userIptvDaysRemaining > 0) {
+                    iptvDaysDisplay.textContent = `${userIptvDaysRemaining} days remaining`;
+                    document.getElementById('iptv-progress-bar-fill').style.width = `${Math.min(100, (userIptvDaysRemaining / 30) * 100)}%`; 
+                } else {
+                    iptvDaysDisplay.textContent = `No active subscription`;
+                    document.getElementById('iptv-progress-bar-fill').style.width = `0%`;
+                }
+
+                if (coinChartInstance) {
+                    coinChartInstance.data.datasets[0].data = [userCoins, 850]; 
+                    coinChartInstance.update();
+                }
+            }
+
+            redeemWatchTimeBtn.addEventListener('click', () => {
+                const selectedMinutes = parseInt(watchTimeSelect.value);
+                const selectedOption = mockData.watchTimeOptions.find(opt => opt.durationMinutes === selectedMinutes);
+
+                if (selectedOption && userCoins >= selectedOption.coins) {
+                    userCoins -= selectedOption.coins;
+                    userWatchTimeRemaining += selectedOption.durationMinutes;
+                    showModal('Redemption Successful', `Successfully redeemed ${selectedOption.label}! Your new balance is ${userCoins} coins.`);
+                    updateSubscriptionUI();
+                } else if (selectedOption) {
+                    showModal('Insufficient Coins', `Not enough coins. You need ${selectedOption.coins - userCoins} more coins to redeem ${selectedOption.label}.`, true);
+                }
+            });
+
+            redeemIptvBtn.addEventListener('click', () => {
+                const selectedDays = parseInt(iptvSelect.value);
+                const selectedOption = mockData.iptvOptions.find(opt => opt.durationDays === selectedDays);
+
+                if (selectedOption && userCoins >= selectedOption.coins) {
+                    userCoins -= selectedOption.coins;
+                    userIptvDaysRemaining += selectedOption.durationDays;
+                    showModal('Redemption Successful', `Successfully redeemed ${selectedOption.label}! Your new balance is ${userCoins} coins.`);
+                    updateSubscriptionUI();
+                } else if (selectedOption) {
+                    showModal('Insufficient Coins', `Not enough coins. You need ${selectedOption.coins - userCoins} more coins to redeem ${selectedOption.label}.`, true);
+                }
+            });
+            
+            function handleInitialLoad() {
+                const hash = window.location.hash.substring(1) || 'home';
+                navigate(hash);
+                populateNewsFeed(); 
+                populateGrids();
+                populateEPG();
+                createCoinChart();
+                updateSubscriptionUI(); 
+            }
+
+            handleInitialLoad();
+        });
+    </script>
+    <script src="enhanced-features.js"></script>
+</body>
+</html>

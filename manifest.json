@@ -1,0 +1,99 @@
+{
+  "name": "Bulldog Stream - Premium Streaming Platform",
+  "short_name": "Bulldog Stream",
+  "description": "Watch live TV, movies, series and earn coins with the ultimate streaming experience",
+  "start_url": "/home.htm",
+  "display": "standalone",
+  "background_color": "#1A1A1A",
+  "theme_color": "#B800FF",
+  "orientation": "portrait-primary",
+  "categories": ["entertainment", "video", "streaming"],
+  "lang": "en",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImdyYWQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNCODAwRkY7c3RvcC1vcGFjaXR5OjEiIC8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNkIyMUZGO3N0b3Atb3BhY2l0eToxIiAvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMjQiIGZpbGw9InVybCgjZ3JhZCkiLz48cGF0aCBkPSJNNDggNjRoMTZsMTYgMzIgMTYtMzJoMTZMOTYgMTEyIDgwIDE0NEg2NEw0OCAxMTJWNjR6bTY0IDBoMzJjOCAwIDE2IDggMTYgMTZ2MzJjMCA4LTggMTYtMTYgMTZoLTE2djE2aC0xNlY2NHptMTYgNDhoMTZWODBoLTE2djMyeiIgZmlsbD0id2hpdGUiLz48L3N2Zz4=",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImdyYWQ1MTIiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNCODAwRkY7c3RvcC1vcGFjaXR5OjEiIC8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNkIyMUZGO3N0b3Atb3BhY2l0eToxIiAvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iNjQiIGZpbGw9InVybCgjZ3JhZDUxMikiLz48cGF0aCBkPSJNMTI4IDE3MGg0Mmw0MiA4NiA0Mi04Nmg0MkwyNDAgMjk4IDIxMyAzODRIMTcxTDEyOCAyOThWMTcwem0xNzEgMGg4NWMyMSAwIDQzIDIxIDQzIDQzdjg1YzAgMjEtMjEgNDMtNDMgNDNoLTQzdjQzaC00MlYxNzB6bTQyIDEyOGg0M1YyMTNoLTQzdjg1eiIgZmlsbD0id2hpdGUiLz48Y2lyY2xlIGN4PSI0MDAiIGN5PSIxNTAiIHI9IjIwIiBmaWxsPSIjRkY0NDQ0Ii8+PHJlY3QgeD0iMzIwIiB5PSIzMjAiIHdpZHRoPSIxNjAiIGhlaWdodD0iMjAiIHJ4PSIxMCIgZmlsbD0id2hpdGUiIG9wYWNpdHk9IjAuNyIvPjwvc3ZnPg==",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Live TV",
+      "short_name": "TV",
+      "description": "Watch live television channels",
+      "url": "/home.htm#tv",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0I4MDBGRiI+PHJlY3QgeD0iMiIgeT0iMyIgd2lkdGg9IjIwIiBoZWlnaHQ9IjE0IiByeD0iMiIgcnk9IjIiLz48bGluZSB4MT0iOCIgeTE9IjIxIiB4Mj0iMTYiIHkyPSIyMSIvPjxsaW5lIHgxPSIxMiIgeTE9IjE3IiB4Mj0iMTIiIHkyPSIyMSIvPjwvc3ZnPg==",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Movies",
+      "short_name": "Movies",
+      "description": "Browse movie collection",
+      "url": "/home.htm#movies",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0I4MDBGRiI+PHBhdGggZD0ibTIwIDMtMiA0aC0zbDItNGgtM2wtMiA0aC0zbDItNEg4TDYgN0gzdjEyYTIgMiAwIDAgMCAyIDJoMTRhMiAyIDAgMCAwIDItMlYzaC0xeiIvPjwvc3ZnPg==",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Admin Panel",
+      "short_name": "Admin",
+      "description": "Access admin dashboard",
+      "url": "/admin.htm",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0I4MDBGRiI+PHBhdGggZD0iTTEyIDFMMTAgM0gzdjE4aDdWM2gtNGwxLTJIMTN6bTQgMTBoNXYyaC01em0wIDRoNXYyaC01em0wIDRoNXYyaC01eiIvPjwvc3ZnPg==",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1NDAgNzIwIj48cmVjdCB3aWR0aD0iNTQwIiBoZWlnaHQ9IjcyMCIgZmlsbD0iIzFBMUExQSIvPjxyZWN0IHg9IjIwIiB5PSI2MCIgd2lkdGg9IjUwMCIgaGVpZ2h0PSIyODAiIHJ4PSIxMCIgZmlsbD0iIzJBMkEyQSIvPjxjaXJjbGUgY3g9IjI3MCIgY3k9IjIwMCIgcj0iNDAiIGZpbGw9IiNCODAwRkYiLz48cG9seWdvbiBwb2ludHM9IjI1NSwxODUgMjU1LDIxNSAyODUsMjAwIiBmaWxsPSJ3aGl0ZSIvPjx0ZXh0IHg9IjI3MCIgeT0iMzgwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiPkJ1bGxkb2cgU3RyZWFtPC90ZXh0Pjx0ZXh0IHg9IjI3MCIgeT0iNDEwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5IiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCI+UHJlbWl1bSBTdHJlYW1pbmcgRXhwZXJpZW5jZTwvdGV4dD48L3N2Zz4=",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA3MjAgNTQwIj48cmVjdCB3aWR0aD0iNzIwIiBoZWlnaHQ9IjU0MCIgZmlsbD0iIzFBMUExQSIvPjxyZWN0IHg9IjYwIiB5PSIyMCIgd2lkdGg9IjYwMCIgaGVpZ2h0PSIzMDAiIHJ4PSIxMCIgZmlsbD0iIzJBMkEyQSIvPjxjaXJjbGUgY3g9IjM2MCIgY3k9IjE3MCIgcj0iNDAiIGZpbGw9IiNCODAwRkYiLz48cG9seWdvbiBwb2ludHM9IjM0NSwxNTUgMzQ1LDE4NSAzNzUsMTcwIiBmaWxsPSJ3aGl0ZSIvPjx0ZXh0IHg9IjM2MCIgeT0iMzYwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiPkJ1bGxkb2cgU3RyZWFtIERhc2hib2FyZDwvdGV4dD48L3N2Zz4=",
+      "sizes": "720x540",
+      "type": "image/svg+xml",
+      "form_factor": "wide"
+    }
+  ],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "file_handlers": [
+    {
+      "action": "/home.htm",
+      "accept": {
+        "video/*": [".mp4", ".mkv", ".avi", ".mov"],
+        "application/x-mpegURL": [".m3u8"]
+      }
+    }
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+bulldog",
+      "url": "/home.htm?stream=%s"
+    }
+  ]
+}

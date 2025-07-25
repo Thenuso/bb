@@ -1,0 +1,29 @@
+#!/bin/bash
+
+echo "========================================"
+echo "   Bulldog Stream - Local Server"
+echo "========================================"
+echo ""
+echo "Starting local server on port 8000..."
+echo ""
+echo "Open your browser and go to:"
+echo "http://localhost:8000/home.htm"
+echo ""
+echo "Press Ctrl+C to stop the server"
+echo "========================================"
+echo ""
+
+cd "$(dirname "$0")"
+
+# Try Python 3 first, then Python 2
+if command -v python3 &> /dev/null; then
+    python3 -m http.server 8000
+elif command -v python &> /dev/null; then
+    python -m http.server 8000
+elif command -v python2 &> /dev/null; then
+    python2 -m SimpleHTTPServer 8000
+else
+    echo "Python is not installed or not in PATH"
+    echo "Please install Python or open home.htm directly in your browser"
+    read -p "Press enter to continue..."
+fi

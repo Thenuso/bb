@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulldog Stream Admin - Dashboard</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Bulldog Stream Admin Dashboard - Manage users, content, analytics, and revenue streams">
+    <meta name="keywords" content="admin, dashboard, streaming, management, analytics, revenue">
+    <meta name="author" content="Bulldog Stream">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="Bulldog Stream Admin Dashboard">
+    <meta property="og:description" content="Comprehensive admin panel for streaming platform management">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="/admin.htm">
+    
+    <!-- External Resources -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="backend.js"></script>
+    <script src="auto-seo.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Admin Specific Styles -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .admin-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stats-card { transition: all 0.3s ease; }
+        .stats-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .sidebar-active { background: linear-gradient(90deg, #B800FF, #9333EA); }
+        .table-hover:hover { background-color: rgba(184, 0, 255, 0.1); }
+        .animate-pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .data-table { max-height: 400px; overflow-y: auto; }
+        .metric-card { background: linear-gradient(145deg, #2A2A2A, #1A1A1A); }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <!-- Admin Login Modal (shown initially) -->
+    <div id="admin-login-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+        <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-white">Admin Access</h2>
+                <p class="text-gray-400">Enter your admin credentials</p>
+            </div>
+            <form id="admin-login-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Username</label>
+                        <input type="text" id="admin-username" value="admin" class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+                        <input type="password" id="admin-password" value="admin123" class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-600 focus:border-transparent">
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all">
+                        Access Dashboard
+                    </button>
+                </div>
+            </form>
+            <p class="text-xs text-gray-500 text-center mt-4">Demo credentials: admin / admin123</p>
+        </div>
+    </div>
+
+    <!-- Main Admin Interface -->
+    <div id="admin-interface" class="hidden">
+        <!-- Header -->
+        <header class="bg-gray-800 border-b border-gray-700 px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <div class="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold">Bulldog Stream Admin</h1>
+                        <p class="text-sm text-gray-400">Dashboard & Management</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <button class="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-5 5v-5z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </button>
+                        <span class="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
+                    </div>
+                    <button onclick="logout()" class="flex items-center space-x-2 px-4 py-2 bg-red-600 rounded-lg hover:bg-red-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex">
+            <!-- Sidebar -->
+            <aside class="w-64 bg-gray-800 min-h-screen">
+                <nav class="p-4">
+                    <ul class="space-y-2">
+                        <li>
+                            <button onclick="showSection('dashboard')" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left hover:bg-gray-700 transition-colors sidebar-active">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5a2 2 0 012-2h4a2 2 0 012 2v6H8V5z"></path>
+                                </svg>
+                                <span>Dashboard</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button onclick="showSection('users')" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left hover:bg-gray-700 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                </svg>
+                                <span>Users</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button onclick="showSection('content')" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left hover:bg-gray-700 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-9 16V6a2 2 0 012-2h8a2 2 0 012 2v14l-5-3-5 3z"></path>
+                                </svg>
+                                <span>Content</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button onclick="showSection('analytics')" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left hover:bg-gray-700 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                <span>Analytics</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button onclick="showSection('revenue')" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left hover:bg-gray-700 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                </svg>
+                                <span>Revenue</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button onclick="showSection('settings')" class="sidebar-link w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left hover:bg-gray-700 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <span>Settings</span>
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-6">
+                <!-- Dashboard Section -->
+                <div id="section-dashboard" class="admin-section">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold mb-2">Dashboard Overview</h2>
+                        <p class="text-gray-400">Real-time platform statistics and performance metrics</p>
+                    </div>
+
+                    <!-- Key Metrics -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="stats-card metric-card p-6 rounded-xl">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-sm">Total Users</p>
+                                    <p class="text-2xl font-bold" id="total-users">12,458</p>
+                                    <p class="text-green-400 text-sm">↗ +12.5%</p>
+                                </div>
+                                <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-card metric-card p-6 rounded-xl">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-sm">Revenue Today</p>
+                                    <p class="text-2xl font-bold" id="revenue-today">$3,247</p>
+                                    <p class="text-green-400 text-sm">↗ +8.2%</p>
+                                </div>
+                                <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-card metric-card p-6 rounded-xl">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-sm">Active Streams</p>
+                                    <p class="text-2xl font-bold" id="active-streams">1,893</p>
+                                    <p class="text-yellow-400 text-sm">↗ +2.1%</p>
+                                </div>
+                                <div class="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1.5a1.5 1.5 0 011.5 1.5v1.5m-3-6h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-card metric-card p-6 rounded-xl">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-sm">Server Load</p>
+                                    <p class="text-2xl font-bold" id="server-load">68%</p>
+                                    <p class="text-green-400 text-sm">Optimal</p>
+                                </div>
+                                <div class="w-12 h-12 bg-orange-600 rounded-lg flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-gray-800 p-6 rounded-xl">
+                            <h3 class="text-lg font-semibold mb-4">Revenue Analytics</h3>
+                            <canvas id="revenue-chart" height="300"></canvas>
+                        </div>
+                        <div class="bg-gray-800 p-6 rounded-xl">
+                            <h3 class="text-lg font-semibold mb-4">User Growth</h3>
+                            <canvas id="users-chart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Users Section -->
+                <div id="section-users" class="admin-section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold mb-2">User Management</h2>
+                            <p class="text-gray-400">Manage user accounts, permissions, and activity</p>
+                        </div>
+                        <button onclick="addNewUser()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            <span>Add User</span>
+                        </button>
+                    </div>
+
+                    <div class="bg-gray-800 rounded-xl overflow-hidden">
+                        <div class="p-4 border-b border-gray-700">
+                            <div class="flex space-x-4">
+                                <input type="text" placeholder="Search users..." class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2">
+                                <select class="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2">
+                                    <option>All Users</option>
+                                    <option>Premium</option>
+                                    <option>Free</option>
+                                    <option>Suspended</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="data-table">
+                            <table class="w-full">
+                                <thead class="bg-gray-700">
+                                    <tr>
+                                        <th class="text-left p-4">User</th>
+                                        <th class="text-left p-4">Email</th>
+                                        <th class="text-left p-4">Status</th>
+                                        <th class="text-left p-4">Coins</th>
+                                        <th class="text-left p-4">Joined</th>
+                                        <th class="text-left p-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body">
+                                    <!-- Users will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Section -->
+                <div id="section-content" class="admin-section hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 class="text-2xl font-bold mb-2">Content Management</h2>
+                            <p class="text-gray-400">Manage movies, series, channels, and live streams</p>
+                        </div>
+                        <button onclick="addNewContent()" class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            <span>Add Content</span>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="bg-gray-800 p-6 rounded-xl text-center">
+                            <h3 class="text-lg font-semibold mb-2">Movies</h3>
+                            <p class="text-3xl font-bold text-blue-400" id="total-movies">1,247</p>
+                            <p class="text-gray-400 text-sm">Total Movies</p>
+                        </div>
+                        <div class="bg-gray-800 p-6 rounded-xl text-center">
+                            <h3 class="text-lg font-semibold mb-2">TV Series</h3>
+                            <p class="text-3xl font-bold text-green-400" id="total-series">892</p>
+                            <p class="text-gray-400 text-sm">Total Series</p>
+                        </div>
+                        <div class="bg-gray-800 p-6 rounded-xl text-center">
+                            <h3 class="text-lg font-semibold mb-2">Live Channels</h3>
+                            <p class="text-3xl font-bold text-purple-400" id="total-channels">156</p>
+                            <p class="text-gray-400 text-sm">Active Channels</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-800 rounded-xl overflow-hidden">
+                        <div class="p-4 border-b border-gray-700">
+                            <div class="flex space-x-4">
+                                <input type="text" placeholder="Search content..." class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2">
+                                <select class="bg-gray-700 border border-gray-600 rounded-lg px-4 py-2">
+                                    <option>All Content</option>
+                                    <option>Movies</option>
+                                    <option>TV Series</option>
+                                    <option>Live Channels</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="data-table">
+                            <table class="w-full">
+                                <thead class="bg-gray-700">
+                                    <tr>
+                                        <th class="text-left p-4">Title</th>
+                                        <th class="text-left p-4">Type</th>
+                                        <th class="text-left p-4">Status</th>
+                                        <th class="text-left p-4">Views</th>
+                                        <th class="text-left p-4">Added</th>
+                                        <th class="text-left p-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="content-table-body">
+                                    <!-- Content will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Section -->
+                <div id="section-analytics" class="admin-section hidden">
+                    <h2 class="text-2xl font-bold mb-6">Analytics & Reports</h2>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-gray-800 p-6 rounded-xl">
+                            <h3 class="text-lg font-semibold mb-4">Watch Time Distribution</h3>
+                            <canvas id="watchtime-chart" height="300"></canvas>
+                        </div>
+                        <div class="bg-gray-800 p-6 rounded-xl">
+                            <h3 class="text-lg font-semibold mb-4">Popular Content</h3>
+                            <canvas id="popular-chart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue Section -->
+                <div id="section-revenue" class="admin-section hidden">
+                    <h2 class="text-2xl font-bold mb-6">Revenue Management</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                        <div class="bg-gray-800 p-6 rounded-xl text-center">
+                            <h3 class="text-lg font-semibold mb-2">Today</h3>
+                            <p class="text-3xl font-bold text-green-400">$3,247</p>
+                            <p class="text-gray-400 text-sm">Revenue</p>
+                        </div>
+                        <div class="bg-gray-800 p-6 rounded-xl text-center">
+                            <h3 class="text-lg font-semibold mb-2">This Month</h3>
+                            <p class="text-3xl font-bold text-blue-400">$89,432</p>
+                            <p class="text-gray-400 text-sm">Revenue</p>
+                        </div>
+                        <div class="bg-gray-800 p-6 rounded-xl text-center">
+                            <h3 class="text-lg font-semibold mb-2">Premium Users</h3>
+                            <p class="text-3xl font-bold text-purple-400">2,847</p>
+                            <p class="text-gray-400 text-sm">Active Subs</p>
+                        </div>
+                        <div class="bg-gray-800 p-6 rounded-xl text-center">
+                            <h3 class="text-lg font-semibold mb-2">Coins Sold</h3>
+                            <p class="text-3xl font-bold text-yellow-400">457K</p>
+                            <p class="text-gray-400 text-sm">This Month</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-800 p-6 rounded-xl">
+                        <h3 class="text-lg font-semibold mb-4">Revenue Trends</h3>
+                        <canvas id="revenue-trend-chart" height="300"></canvas>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div id="section-settings" class="admin-section hidden">
+                    <h2 class="text-2xl font-bold mb-6">Platform Settings</h2>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-gray-800 p-6 rounded-xl">
+                            <h3 class="text-lg font-semibold mb-4">General Settings</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Platform Name</label>
+                                    <input type="text" value="Bulldog Stream" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Default Coin Rate</label>
+                                    <input type="number" value="100" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Max Upload Size (MB)</label>
+                                    <input type="number" value="500" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-800 p-6 rounded-xl">
+                            <h3 class="text-lg font-semibold mb-4">SEO Settings</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Meta Description</label>
+                                    <textarea class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 h-20" placeholder="Platform description..."></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Keywords</label>
+                                    <input type="text" value="streaming, movies, tv, entertainment" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2">
+                                </div>
+                                <button class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg">Update SEO</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Admin authentication
+        document.getElementById('admin-login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+            
+            if (username === 'admin' && password === 'admin123') {
+                document.getElementById('admin-login-modal').classList.add('hidden');
+                document.getElementById('admin-interface').classList.remove('hidden');
+                initializeDashboard();
+            } else {
+                alert('Invalid credentials');
+            }
+        });
+
+        // Logout function
+        function logout() {
+            document.getElementById('admin-login-modal').classList.remove('hidden');
+            document.getElementById('admin-interface').classList.add('hidden');
+        }
+
+        // Section navigation
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.admin-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Remove active class from all sidebar links
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.classList.remove('sidebar-active');
+            });
+            
+            // Show selected section
+            document.getElementById(`section-${sectionName}`).classList.remove('hidden');
+            
+            // Add active class to clicked sidebar link
+            event.target.closest('.sidebar-link').classList.add('sidebar-active');
+        }
+
+        // Initialize dashboard
+        function initializeDashboard() {
+            populateUsersTable();
+            populateContentTable();
+            createCharts();
+            startRealTimeUpdates();
+        }
+
+        // Populate users table
+        function populateUsersTable() {
+            const usersData = [
+                { id: 1, name: 'John Doe', email: 'john@email.com', status: 'Premium', coins: 2450, joined: '2025-01-15' },
+                { id: 2, name: 'Jane Smith', email: 'jane@email.com', status: 'Free', coins: 125, joined: '2025-01-18' },
+                { id: 3, name: 'Mike Johnson', email: 'mike@email.com', status: 'Premium', coins: 3890, joined: '2025-01-20' },
+                { id: 4, name: 'Sarah Wilson', email: 'sarah@email.com', status: 'Free', coins: 89, joined: '2025-01-22' },
+                { id: 5, name: 'David Brown', email: 'david@email.com', status: 'Suspended', coins: 0, joined: '2025-01-10' }
+            ];
+
+            const tbody = document.getElementById('users-table-body');
+            tbody.innerHTML = usersData.map(user => `
+                <tr class="table-hover border-b border-gray-700">
+                    <td class="p-4">
+                        <div class="flex items-center space-x-3">
+                            <img src="https://ui-avatars.com/api/?name=${user.name}&background=B800FF&color=fff" 
+                                 class="w-8 h-8 rounded-full" alt="${user.name}">
+                            <span class="font-medium">${user.name}</span>
+                        </div>
+                    </td>
+                    <td class="p-4">${user.email}</td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${
+                            user.status === 'Premium' ? 'bg-green-600 text-white' :
+                            user.status === 'Free' ? 'bg-blue-600 text-white' :
+                            'bg-red-600 text-white'
+                        }">${user.status}</span>
+                    </td>
+                    <td class="p-4">${user.coins.toLocaleString()}</td>
+                    <td class="p-4">${user.joined}</td>
+                    <td class="p-4">
+                        <div class="flex space-x-2">
+                            <button onclick="editUser(${user.id})" class="text-blue-400 hover:text-blue-300">Edit</button>
+                            <button onclick="deleteUser(${user.id})" class="text-red-400 hover:text-red-300">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Populate content table
+        function populateContentTable() {
+            const contentData = [
+                { id: 1, title: 'Avengers: Endgame', type: 'Movie', status: 'Active', views: 15420, added: '2025-01-15' },
+                { id: 2, title: 'Game of Thrones', type: 'Series', status: 'Active', views: 28950, added: '2025-01-12' },
+                { id: 3, title: 'ESPN Live', type: 'Channel', status: 'Live', views: 5678, added: '2025-01-10' },
+                { id: 4, title: 'The Dark Knight', type: 'Movie', status: 'Active', views: 12340, added: '2025-01-18' },
+                { id: 5, title: 'Breaking Bad', type: 'Series', status: 'Active', views: 19876, added: '2025-01-14' }
+            ];
+
+            const tbody = document.getElementById('content-table-body');
+            tbody.innerHTML = contentData.map(content => `
+                <tr class="table-hover border-b border-gray-700">
+                    <td class="p-4">
+                        <div class="flex items-center space-x-3">
+                            <img src="https://picsum.photos/40/60?random=${content.id}" 
+                                 class="w-10 h-15 object-cover rounded" alt="${content.title}">
+                            <span class="font-medium">${content.title}</span>
+                        </div>
+                    </td>
+                    <td class="p-4">${content.type}</td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${
+                            content.status === 'Live' ? 'bg-red-600 text-white' :
+                            'bg-green-600 text-white'
+                        }">${content.status}</span>
+                    </td>
+                    <td class="p-4">${content.views.toLocaleString()}</td>
+                    <td class="p-4">${content.added}</td>
+                    <td class="p-4">
+                        <div class="flex space-x-2">
+                            <button onclick="editContent(${content.id})" class="text-blue-400 hover:text-blue-300">Edit</button>
+                            <button onclick="deleteContent(${content.id})" class="text-red-400 hover:text-red-300">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Create charts
+        function createCharts() {
+            // Revenue Chart
+            const revenueCtx = document.getElementById('revenue-chart').getContext('2d');
+            new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Revenue',
+                        data: [12000, 19000, 15000, 25000, 22000, 30000],
+                        borderColor: '#B800FF',
+                        backgroundColor: 'rgba(184, 0, 255, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: '#374151' }, ticks: { color: '#9CA3AF' } },
+                        x: { grid: { color: '#374151' }, ticks: { color: '#9CA3AF' } }
+                    }
+                }
+            });
+
+            // Users Chart
+            const usersCtx = document.getElementById('users-chart').getContext('2d');
+            new Chart(usersCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'New Users',
+                        data: [450, 590, 480, 720, 650, 890],
+                        backgroundColor: '#10B981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: '#374151' }, ticks: { color: '#9CA3AF' } },
+                        x: { grid: { color: '#374151' }, ticks: { color: '#9CA3AF' } }
+                    }
+                }
+            });
+        }
+
+        // Real-time updates
+        function startRealTimeUpdates() {
+            setInterval(() => {
+                // Update metrics with slight variations
+                const totalUsers = document.getElementById('total-users');
+                const currentUsers = parseInt(totalUsers.textContent.replace(',', ''));
+                totalUsers.textContent = (currentUsers + Math.floor(Math.random() * 10)).toLocaleString();
+
+                const activeStreams = document.getElementById('active-streams');
+                const currentStreams = parseInt(activeStreams.textContent.replace(',', ''));
+                activeStreams.textContent = (currentStreams + Math.floor(Math.random() * 20) - 10).toLocaleString();
+
+                const serverLoad = document.getElementById('server-load');
+                const currentLoad = parseInt(serverLoad.textContent.replace('%', ''));
+                const newLoad = Math.max(50, Math.min(90, currentLoad + Math.floor(Math.random() * 10) - 5));
+                serverLoad.textContent = newLoad + '%';
+            }, 5000);
+        }
+
+        // Placeholder functions
+        function addNewUser() { alert('Add New User functionality would be implemented here'); }
+        function editUser(id) { alert(`Edit user ${id} functionality would be implemented here`); }
+        function deleteUser(id) { 
+            if (confirm('Are you sure you want to delete this user?')) {
+                alert(`User ${id} deleted`);
+            }
+        }
+        function addNewContent() { alert('Add New Content functionality would be implemented here'); }
+        function editContent(id) { alert(`Edit content ${id} functionality would be implemented here`); }
+        function deleteContent(id) { 
+            if (confirm('Are you sure you want to delete this content?')) {
+                alert(`Content ${id} deleted`);
+            }
+        }
+    </script>
+</body>
+</html>
