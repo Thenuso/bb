@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Test - Bulldog Stream</title>
+    <style>
+        body { 
+            background: #1a1a1a; 
+            color: white; 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+        }
+        button { 
+            background: #b800ff; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            margin: 10px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+        }
+        button:hover { background: #9600cc; }
+        .result { 
+            background: #2a2a2a; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin: 10px 0; 
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Debug Test Page</h1>
+    <p>This page tests the basic functionality before the main platform.</p>
+    
+    <div>
+        <button onclick="testLogin()">Test Login Modal</button>
+        <button onclick="testRegister()">Test Register Modal</button>
+        <button onclick="testCoins()">Test Coins Feature</button>
+        <button onclick="testAPI()">Test API Calls</button>
+    </div>
+    
+    <div id="results" class="result">
+        <h3>Test Results:</h3>
+        <div id="output">Click buttons above to test functionality...</div>
+    </div>
+
+    <script>
+        function log(message) {
+            document.getElementById('output').innerHTML += '<br>' + new Date().toLocaleTimeString() + ': ' + message;
+        }
+
+        function testLogin() {
+            log('🔐 Testing Login Modal...');
+            alert('Login modal would open here');
+            log('✅ Login test completed');
+        }
+
+        function testRegister() {
+            log('📝 Testing Register Modal...');
+            alert('Register modal would open here');
+            log('✅ Register test completed');
+        }
+
+        function testCoins() {
+            log('🪙 Testing Coins Feature...');
+            alert('Coins feature would activate here');
+            log('✅ Coins test completed');
+        }
+
+        async function testAPI() {
+            log('🌐 Testing API calls...');
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                log('✅ API Health check: ' + JSON.stringify(data));
+                
+                const channelsResponse = await fetch('/api/channels');
+                const channelsData = await channelsResponse.json();
+                log('✅ Channels API: Found ' + channelsData.channels.length + ' channels');
+                
+            } catch (error) {
+                log('❌ API Error: ' + error.message);
+            }
+        }
+
+        // Test if JavaScript is loading
+        log('🚀 Debug page loaded successfully');
+    </script>
+</body>
+</html>

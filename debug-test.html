@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulldog Stream - Debug Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1A1A1A',
+                        secondary: '#2A2A2A',
+                        accent: '#B800FF',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #1A1A1A; 
+        }
+    </style>
+</head>
+<body class="text-gray-200 bg-primary min-h-screen">
+    
+    <div class="container mx-auto px-4 py-8">
+        <!-- Test Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-4">🎬 Bulldog Stream - Debug Test</h1>
+            <p class="text-xl text-gray-400">Testing if Tailwind CSS and basic functionality works</p>
+        </header>
+        
+        <!-- Test Buttons -->
+        <div class="text-center mb-8">
+            <button id="testBtn" class="bg-accent text-white px-6 py-3 rounded-full font-semibold hover:bg-opacity-80 transition-colors mr-4">
+                Click Me!
+            </button>
+            <button id="colorBtn" class="bg-secondary border border-gray-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-gray-700 transition-colors">
+                Change Color
+            </button>
+        </div>
+        
+        <!-- Test Content -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-secondary p-6 rounded-lg border border-gray-700 hover:border-accent transition-colors">
+                <h3 class="text-xl font-bold text-white mb-2">Test Card 1</h3>
+                <p class="text-gray-400">This is a test card to verify Tailwind CSS styling works correctly.</p>
+            </div>
+            <div class="bg-secondary p-6 rounded-lg border border-gray-700 hover:border-accent transition-colors">
+                <h3 class="text-xl font-bold text-white mb-2">Test Card 2</h3>
+                <p class="text-gray-400">Hover effects and transitions should be working.</p>
+            </div>
+            <div class="bg-secondary p-6 rounded-lg border border-gray-700 hover:border-accent transition-colors">
+                <h3 class="text-xl font-bold text-white mb-2">Test Card 3</h3>
+                <p class="text-gray-400">Purple accent color should appear on hover.</p>
+            </div>
+        </div>
+        
+        <!-- Test Output -->
+        <div id="output" class="bg-secondary p-4 rounded-lg border border-gray-700 text-center">
+            <p class="text-gray-400">JavaScript status: <span id="jsStatus" class="text-red-400">Not loaded</span></p>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded successfully');
+            
+            // Update status
+            const jsStatus = document.getElementById('jsStatus');
+            jsStatus.textContent = 'Working!';
+            jsStatus.className = 'text-green-400';
+            
+            // Test button functionality
+            document.getElementById('testBtn').addEventListener('click', function() {
+                const output = document.getElementById('output');
+                output.innerHTML = '<p class="text-green-400 font-bold">✅ Button click working! Tailwind CSS is loaded!</p>';
+            });
+            
+            // Color change button
+            document.getElementById('colorBtn').addEventListener('click', function() {
+                document.body.style.backgroundColor = document.body.style.backgroundColor === 'rgb(26, 26, 26)' ? '#2A2A2A' : '#1A1A1A';
+            });
+            
+            console.log('All JavaScript loaded successfully');
+        });
+    </script>
+</body>
+</html>

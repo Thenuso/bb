@@ -123,11 +123,14 @@ class BulldogStreamApp {
 
     // Initialize event listeners
     initializeEventListeners() {
+        console.log('🔧 Initializing event listeners...');
+        
         // Navigation
         this.elements.navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 const section = link.dataset.section;
+                console.log('🔗 Navigation clicked:', section);
                 this.navigateToSection(section);
             });
         });
@@ -144,8 +147,14 @@ class BulldogStreamApp {
         });
 
         // Authentication
-        this.elements.loginBtn?.addEventListener('click', () => this.showAuthModal('login'));
-        this.elements.registerBtn?.addEventListener('click', () => this.showAuthModal('register'));
+        this.elements.loginBtn?.addEventListener('click', () => {
+            console.log('🔐 Login button clicked');
+            this.showAuthModal('login');
+        });
+        this.elements.registerBtn?.addEventListener('click', () => {
+            console.log('📝 Register button clicked');
+            this.showAuthModal('register');
+        });
         this.elements.logoutBtn?.addEventListener('click', () => this.logout());
         
         this.elements.loginForm?.addEventListener('submit', (e) => this.handleLogin(e));
@@ -175,10 +184,22 @@ class BulldogStreamApp {
         this.elements.setupGuideBtn?.addEventListener('click', () => this.showSetupGuide());
 
         // Earn coins
-        this.elements.referralBtn?.addEventListener('click', () => this.showReferralLink());
-        this.elements.surveysBtn?.addEventListener('click', () => this.showSurveys());
-        this.elements.dailyBonusBtn?.addEventListener('click', () => this.claimDailyBonus());
-        this.elements.buyCoinsBtn?.addEventListener('click', () => this.showPurchaseModal());
+        this.elements.referralBtn?.addEventListener('click', () => {
+            console.log('🔗 Referral button clicked');
+            this.showReferralLink();
+        });
+        this.elements.surveysBtn?.addEventListener('click', () => {
+            console.log('📋 Surveys button clicked');
+            this.showSurveys();
+        });
+        this.elements.dailyBonusBtn?.addEventListener('click', () => {
+            console.log('🎁 Daily bonus button clicked');
+            this.claimDailyBonus();
+        });
+        this.elements.buyCoinsBtn?.addEventListener('click', () => {
+            console.log('💳 Buy coins button clicked');
+            this.showPurchaseModal();
+        });
 
         // Purchase
         this.elements.packageCards?.forEach(card => {
@@ -1070,6 +1091,14 @@ class BulldogStreamApp {
     // Initialization
     async init() {
         console.log('🚀 Initializing Bulldog Stream App...');
+        console.log('📊 Elements found:', {
+            loginBtn: !!this.elements.loginBtn,
+            registerBtn: !!this.elements.registerBtn,
+            referralBtn: !!this.elements.referralBtn,
+            surveysBtn: !!this.elements.surveysBtn,
+            dailyBonusBtn: !!this.elements.dailyBonusBtn,
+            buyCoinsBtn: !!this.elements.buyCoinsBtn
+        });
         
         // Show loading screen
         this.elements.loadingScreen.style.display = 'flex';
@@ -1105,3 +1134,8 @@ class BulldogStreamApp {
 // Create global app instance
 window.BulldogStreamApp = BulldogStreamApp;
 window.app = new BulldogStreamApp();
+
+// Initialize app when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    window.app.init();
+});
